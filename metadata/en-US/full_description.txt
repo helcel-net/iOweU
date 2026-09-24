@@ -1,0 +1,14 @@
+iOweU ("I owe you") keeps track of who owes whom, between people who actually meet.
+
+Write down a promise - a beer, a lift to the airport, an hour of help - and hand it to someone. It is signed with a key that never leaves your phone, so what they hold is evidence that you wrote it. They can redeem it with you, or pass it on to somebody else, and it still reads as yours.
+
+There is no account, no server and no internet permission. Promises move over Bluetooth when two phones are next to each other.
+
+* Signed promises: each one carries its own history, from who wrote it to whoever holds it now
+* Trade: each side puts in a promise or nothing, both confirm, and a swap is all-or-nothing
+* Redeem: press Redeem and the person who owes it is prompted. If they are not around, the ask waits and goes out by itself when they turn up
+* Templates: write "1 Beer" once and hand out a fresh, separately signed promise every round
+* Tie a promise to a place or a time (never enforced, just as hint), this way the person who made it can decide whether it still counts
+* Trust people by scanning the code on their profile and naming them; you can only trade with someone you have named/trusted
+* Small & Fast
+* 100% Free and Open Source software, with no proprietary dependencies

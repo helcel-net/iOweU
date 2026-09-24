@@ -1,0 +1,120 @@
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.plugin.serialization' version '2.4.20'
+    id 'org.jetbrains.kotlin.plugin.compose' version '2.4.20'
+}
+
+android {
+    namespace 'net.helcel.owu'
+    compileSdk = 37
+
+    defaultConfig {
+        // Two names for one app: what it calls itself on its own screens, and
+        // what it is called out in the world - the launcher, the store listing
+        // and the About page.
+        buildConfigField("String", "PUBLIC_NAME", "\"iOweU\"")
+        manifestPlaceholders["PUBLIC_NAME"] = "iOweU"
+        applicationId 'net.helcel.owu'
+        minSdk = 28
+        targetSdk = 37
+        versionName project.hasProperty('VERSION_NAME') ? project.property('VERSION_NAME') : "0.1"
+        versionCode project.hasProperty('VERSION_CODE') ? project.property('VERSION_CODE').toInteger() : 1
+    }
+    signingConfigs {
+        register("release") {
+            try {
+                def keystorePropertiesFile = rootProject.file("app/keystore.properties")
+                def keystoreProperties = new Properties()
+                keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+
+                keyAlias keystoreProperties['keyAlias']
+                keyPassword keystoreProperties['keyPassword']
+                storeFile file(keystoreProperties['storeFile'])
+                storePassword keystoreProperties['storePassword']
+            } catch (FileNotFoundException e) {
+                println("File not found: ${e.message}")
+            }
+        }
+    }
+    buildTypes {
+        debug {
+            debuggable true
+            applicationIdSuffix ".debug"
+        }
+        release {
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        signedRelease {
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig = signingConfigs.getByName("release")
+        }
+    }
+    compileOptions {
+        coreLibraryDesugaringEnabled true
+
+        sourceCompatibility JavaVersion.VERSION_21
+        targetCompatibility JavaVersion.VERSION_21
+        encoding 'utf-8'
+    }
+
+    buildFeatures {
+        compose true
+        buildConfig true
+    }
+
+    dependenciesInfo {
+        // Disables dependency metadata when building APKs.
+        includeInApk = false
+        // Disables dependency metadata when building Android App Bundles.
+        includeInBundle = false
+    }
+    androidResources {
+        // The app ships English strings only; without this the libraries drag
+        // in some eighty locales of their own.
+        localeFilters += ["en"]
+    }
+
+    testOptions {
+        // IouStore logs through android.util.Log on unreadable files; the JVM has no Log.
+        unitTests.returnDefaultValues = true
+    }
+
+    lint {
+        disable 'UsingMaterialAndMaterial3Libraries'
+        // Strings looked up inside click handlers, where stringResource() is
+        // not available; the context captured at composition is the right one.
+        disable 'LocalContextGetResourceValueCall'
+    }
+
+}
+
+dependencies {
+    implementation 'androidx.compose.material3:material3:1.4.0'
+    implementation "androidx.compose.material:material:1.12.1"
+    implementation 'androidx.compose.material:material-icons-extended:1.7.8'
+    implementation 'androidx.navigation:navigation-compose:2.10.1'
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs_nio:2.1.5'
+
+    implementation 'org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0'
+
+    // QR codes for exchanging identities. Both Apache-2.0, no Play Services.
+    implementation 'com.google.zxing:core:3.5.4'
+    implementation 'com.journeyapps:zxing-android-embedded:4.3.0'
+
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-test:1.9.0'
+    testImplementation 'org.jetbrains.kotlin:kotlin-test-junit:2.4.20'
+
+    implementation 'androidx.compose.ui:ui'
+    implementation "androidx.activity:activity-ktx:1.13.0"
+
+    implementation 'androidx.compose.ui:ui-tooling-preview'
+
+
+    implementation platform('androidx.compose:compose-bom:2026.09.00')
+    debugImplementation 'androidx.compose.ui:ui-tooling:1.12.1'
+}

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+        The bars are transparent and the app paints behind them, so the strip
+        above the top bar is the top bar's own colour whatever the theme makes
+        that. Naming a colour here cannot work: the app bar is Material You's
+        dynamic primary, which is chosen on the device from the user's
+        wallpaper, and no value written in this file will ever match it.
+        (From API 35 the platform ignores these colours anyway.)
+    -->
+    <style name="Theme.Owu" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <!-- Only seen for the instant before the first frame. -->
+        <item name="android:windowBackground">@color/white</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+    </style>
+</resources>
