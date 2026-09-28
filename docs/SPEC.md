@@ -25,6 +25,10 @@ An OwU may name a place (point, radius, label) and a redemption window (`not_bef
 
 Both are covered by the ISSUE signature, so neither can be edited after the fact.
 
+### Non-transferable
+
+An OwU may be marked `non_transferable`. It can be given away by its debtor, and handed back to them to be redeemed, and that is all: whoever receives it cannot pass it on, by gift or by swap. **Unlike the gates, this is enforced**, by the verifier (section 2.3), so a chain that passes one on is rejected wherever it goes. The flag is in the signed metadata, so it cannot be removed after issue. In the canonical form it appears only when set, which leaves the hash of every OwU written without it unchanged.
+
 ---
 
 ## 2. Cryptography
@@ -55,7 +59,8 @@ An OwU is its metadata and a chain of blocks.
             "label": "Lausanne"
         },
         "not_before": 1790000000,
-        "not_after": 1792600000
+        "not_after": 1792600000,
+        "non_transferable": true
     },
     "ledger_chain": [
         {
@@ -104,7 +109,7 @@ A received chain is accepted only if every rule holds; otherwise it is dropped w
 1.  **Block 0** is `ISSUE`: `sequence == 0`, `parent_hash == 0...0`, `metadata_hash` matches the metadata, signature verifies under `debtor_pub_key`. Debtor and creditor may be the same key: a blank promise (section 3). Initial state: holder = creditor, status = ACTIVE.
 2.  **For each block n >= 1:** `sequence == n`; `parent_hash` equals the hash of block n-1; no block may follow a `REDEEMED`; the signature verifies under the block's designated signer, **and is in the one accepted encoding** - minimal DER, low _s_ (section 2.4).
 3.  **Authorization matrix:**
-    - `TRANSFER`: status is ACTIVE; `transferor_pub_key` is the current holder; transferee != transferor. Holder becomes transferee. With an `agreement`, section 2.6 applies on top of those three rules.
+    - `TRANSFER`: status is ACTIVE; `transferor_pub_key` is the current holder; transferee != transferor; if the metadata is `non_transferable`, the holder or the transferee is the debtor. Holder becomes transferee. With an `agreement`, section 2.6 applies on top of those rules.
     - `REDEEMED`: status is ACTIVE, `debtor_pub_key` is the OwU's debtor, **and the debtor is the current holder** - a promise is closed by its maker, once it is back in their hands. Status becomes REDEEMED.
 
 Timestamps are not validated against each other; device clocks are not trusted and they are for display only.
@@ -162,7 +167,7 @@ Each side's `ious` are sorted by `iou_id` in the signed bytes, so both parties s
 2.  **Accept:** B, holding every OwU on the right, checks that each is still at the stated head and that B is the named holder, and signs the same core.
 3.  **Apply:** with both signatures present, a `TRANSFER` carrying the agreement is appended to _every_ chain named. On A's OwUs the block is signed by A, on B's by B - and the block's signature **is** that side's agreement signature, so once both have signed, either party can append every block. Because the agreement is what one signature has to commit to, such a block signs `signingBytes()` rather than its own payload; that is the only case where the two differ.
 
-On top of the three `TRANSFER` rules, the verifier accepts an agreement-bearing block on chain Z only if: the agreement names Z on one side and not on the other; that side's holder is the block's `transferor_pub_key` and the other side's holder is its `transferee_pub_key`; Z's pinned `head_hash` in that side equals the block's `parent_hash`; the block's timestamp equals the agreement's; the other side is not empty; both signatures are present and verify; and the block's signature equals this side's agreement signature.
+On top of the `TRANSFER` rules, the verifier accepts an agreement-bearing block on chain Z only if: the agreement names Z on one side and not on the other; that side's holder is the block's `transferor_pub_key` and the other side's holder is its `transferee_pub_key`; Z's pinned `head_hash` in that side equals the block's `parent_hash`; the block's timestamp equals the agreement's; the other side is not empty; both signatures are present and verify; and the block's signature equals this side's agreement signature.
 
 Pinning **every** OwU to a head hash is what makes the bundle one deal: if any of them moves first the agreement is void, and no partial swap can land.
 

@@ -35,6 +35,8 @@ data class Metadata(
     val geoloc: GeoLoc? = null,
     @SerialName("not_before") val notBefore: Long? = null,
     @SerialName("not_after") val notAfter: Long? = null,
+    /** Bound to whoever it is first given to: they can only hand it back. */
+    @SerialName("non_transferable") val nonTransferable: Boolean = false,
 ) {
     // All of it signed with the genesis block, description included: neither
     // side can edit what was promised.
@@ -45,11 +47,21 @@ data class Metadata(
         "geoloc" to geoloc?.canonical(),
         "not_before" to notBefore,
         "not_after" to notAfter,
+        // Only when set, so every OwU written before the flag keeps its hash.
+        "non_transferable" to nonTransferable.takeIf { it },
     )
 
     fun hash(): String = Hash.sha256Hex(Canonical.bytes(canonical()))
 
     val hasWindow: Boolean get() = notBefore != null || notAfter != null
+
+    /**
+     * Whether an OwU in [state] may pass to [to]. Always, unless it is
+     * non-transferable: then it may leave its debtor's hands, to whoever they
+     * give it to, and go back to them to be redeemed, and nothing else.
+     */
+    fun allowsTransfer(state: IouState, to: String): Boolean =
+        !nonTransferable || state.holder == state.debtor || to == state.debtor
 
     /** Where [now] falls relative to the redemption window. */
     fun timeGate(now: Long = Ledger.now()): TimeGate = when {

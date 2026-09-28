@@ -45,6 +45,7 @@ object Ledger {
         val state = active(iou)
         if (state.holder != signer.publicKey) throw LedgerException("only the holder can transfer")
         if (transferee == signer.publicKey) throw LedgerException("cannot transfer to yourself")
+        if (!iou.metadata.allowsTransfer(state, transferee)) throw LedgerException("this OwU can only go back to who wrote it")
         val unsigned = Block.Transfer(
             sequence = state.length,
             timestamp = timestamp,
@@ -95,6 +96,9 @@ object Ledger {
         val holder = signer.publicKey
         val theirHolder = theirsStates.first().second.holder
         if (theirsStates.any { it.second.holder != theirHolder }) throw LedgerException("their side is held by more than one person")
+        if (mineStates.any { (iou, s) -> !iou.metadata.allowsTransfer(s, theirHolder) } ||
+            theirsStates.any { (iou, s) -> !iou.metadata.allowsTransfer(s, holder) }
+        ) throw LedgerException("a non-transferable OwU can only go back to who wrote it")
         val draft = ExchangeAgreement(
             id = id,
             timestamp = timestamp,
@@ -120,6 +124,8 @@ object Ledger {
             val state = active(byId.getValue(ref.iouId))
             if (state.holder != signer.publicKey) throw LedgerException("only the holder can accept")
             if (ref.headHash != state.headHash) throw LedgerException("OwU has changed since the proposal")
+            if (!byId.getValue(ref.iouId).metadata.allowsTransfer(state, proposal.left.holder))
+                throw LedgerException("a non-transferable OwU can only go back to who wrote it")
         }
         return proposal.copy(right = proposal.right.copy(signature = signer.sign(proposal.signingBytes())))
     }

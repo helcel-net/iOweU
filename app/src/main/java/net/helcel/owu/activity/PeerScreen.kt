@@ -113,9 +113,14 @@ fun PeerScreen(nav: NavHostController, beaconHex: String) {
     val settled = ready && !linkError
     // Everything I could put down, minted ious for this table included: the
     // picker shows what is already down as chosen rather than hiding it.
-    val mineHeld = remember(ious) {
+    // A non-transferable one is left out unless it can go to them: mine to
+    // give, or theirs coming home.
+    val mineHeld = remember(ious, peer?.key) {
         ious.values.filter {
-            Verifier.verify(it).stateOrNull?.let { s -> s.holder == Repo.me && s.status == Status.ACTIVE } == true
+            Verifier.verify(it).stateOrNull?.let { s ->
+                s.holder == Repo.me && s.status == Status.ACTIVE &&
+                        (peer == null || it.metadata.allowsTransfer(s, peer.key))
+            } == true
         }
     }
     // Putting ious back on the table with the person who owes them *is*

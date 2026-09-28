@@ -1,5 +1,6 @@
 package net.helcel.owu.ledger
 
+import net.helcel.owu.crypto.Canonical
 import net.helcel.owu.crypto.JvmSigner
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -389,5 +390,48 @@ class LedgerTest {
         invalid(moved, "metadata")
         assertEquals(iou, IouJson.decode(IouJson.encode(iou)))
         assertEquals(46.5197, iou.metadata.geoloc!!.latitude, 1e-6)
+    }
+
+    // --- non-transferable --------------------------------------------------
+
+    private val bound = hug.copy(nonTransferable = true)
+
+    @Test
+    fun `a non-transferable OwU goes out from its debtor and only back to them`() {
+        val given = Ledger.transfer(Ledger.issue(alice, bound), alice, bob.publicKey)
+        assertEquals(bob.publicKey, valid(given).holder)
+        assertFailsWith<LedgerException> { Ledger.transfer(given, bob, carol.publicKey) }
+        val home = Ledger.transfer(given, bob, alice.publicKey)
+        assertEquals(Status.REDEEMED, valid(Ledger.redeem(home, alice)).status)
+    }
+
+    @Test
+    fun `a non-transferable OwU signed on anyway is rejected by the verifier`() {
+        val given = Ledger.transfer(Ledger.issue(alice, bound), alice, bob.publicKey)
+        val s = valid(given)
+        val unsigned = Block.Transfer(
+            sequence = s.length, timestamp = Ledger.now(), parentHash = s.headHash,
+            transferor = bob.publicKey, transferee = carol.publicKey,
+        )
+        val passed = given.copy(chain = given.chain + unsigned.copy(signature = bob.sign(unsigned.signedBytes(given.id))))
+        invalid(passed, "non-transferable")
+        // and the flag cannot be stripped to get round it
+        invalid(passed.copy(metadata = bound.copy(nonTransferable = false)), "metadata")
+    }
+
+    @Test
+    fun `a non-transferable OwU swaps only back to its debtor`() {
+        val x = Ledger.issue(alice, creditor = bob.publicKey, metadata = bound)
+        val y = Ledger.issue(carol, creditor = carol.publicKey, metadata = Metadata("Y"))
+        assertFailsWith<LedgerException> { Ledger.proposeExchange(listOf(x), listOf(y), bob) }
+        val z = Ledger.issue(alice, creditor = alice.publicKey, metadata = Metadata("Z"))
+        val a = Ledger.acceptExchange(Ledger.proposeExchange(listOf(x), listOf(z), bob), listOf(z), alice)
+        assertEquals(alice.publicKey, valid(Ledger.applyExchange(x, a)).holder)
+    }
+
+    @Test
+    fun `an OwU without the flag hashes as it always did`() {
+        assertEquals(false, Canonical.encode(hug.canonical()).contains("non_transferable"))
+        assertTrue(Canonical.encode(bound.canonical()).contains("\"non_transferable\":true"))
     }
 }

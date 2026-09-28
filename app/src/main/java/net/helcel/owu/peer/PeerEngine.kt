@@ -216,7 +216,9 @@ class PeerEngine(
      */
     fun put(held: List<Iou> = emptyList(), mint: List<Metadata> = emptyList()): Step {
         held.forEach {
-            if (active(it).holder != me) throw LedgerException("you do not hold that OwU")
+            val s = active(it)
+            if (s.holder != me) throw LedgerException("you do not hold that OwU")
+            if (!it.metadata.allowsTransfer(s, peerKey)) throw LedgerException("that OwU can only go back to who wrote it")
         }
         // Minted here, not by the caller, so a bundle that never leaves takes
         // its fresh ious with it.
@@ -259,7 +261,9 @@ class PeerEngine(
      */
     private fun adoptTheirs(ious: List<Iou>) {
         ious.forEach {
-            if (active(it).holder != peerKey) throw IllegalStateException("they offer an OwU they do not hold")
+            val s = active(it)
+            if (s.holder != peerKey) throw IllegalStateException("they offer an OwU they do not hold")
+            if (!it.metadata.allowsTransfer(s, me)) throw IllegalStateException("they offer an OwU that cannot be passed on")
         }
         if (ious.map { it.id }.toSet().size != ious.size) throw IllegalStateException("the same OwU twice")
         theirOffer = ious

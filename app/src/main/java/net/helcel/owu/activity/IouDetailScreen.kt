@@ -153,6 +153,9 @@ fun IouDetailScreen(nav: NavHostController, id: String) {
                     (g.label?.let { "$it · " } ?: "") + "%.5f, %.5f · %d m".format(g.latitude, g.longitude, g.radiusM),
                 )
             }
+            if (iou.metadata.nonTransferable) {
+                Field(stringResource(R.string.field_transfer), stringResource(R.string.non_transferable_desc))
+            }
 
             // Redeeming is handing it back to whoever wrote it. Your own
             // promise closes itself on coming home, so this is only ever

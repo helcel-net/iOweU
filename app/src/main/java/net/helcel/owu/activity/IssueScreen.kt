@@ -88,6 +88,7 @@ fun IssueScreen(nav: NavHostController, templateId: String? = null, asTemplate: 
     var notBefore by remember { mutableStateOf(template?.metadata?.notBefore) }
     var notAfter by remember { mutableStateOf(template?.metadata?.notAfter) }
     var hasWindow by remember { mutableStateOf(template?.metadata?.hasWindow == true) }
+    var nonTransferable by remember { mutableStateOf(template?.metadata?.nonTransferable == true) }
 
     // The keyboard walks through the form: every field offers "next" and
     // moves focus on, and the last one offers "done" and puts the keyboard
@@ -119,6 +120,7 @@ fun IssueScreen(nav: NavHostController, templateId: String? = null, asTemplate: 
         geoloc = parsedGeo(),
         notBefore = notBefore.takeIf { hasWindow },
         notAfter = notAfter.takeIf { hasWindow },
+        nonTransferable = nonTransferable,
     )
 
     fun save() {
@@ -315,6 +317,21 @@ fun IssueScreen(nav: NavHostController, templateId: String? = null, asTemplate: 
                     value = notAfter, onChange = { notAfter = it },
                     modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
                 )
+            }
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth().padding(top = 16.dp).clickable { nonTransferable = !nonTransferable },
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(stringResource(R.string.field_transfer), style = MaterialTheme.typography.subtitle1)
+                    Text(
+                        stringResource(R.string.field_transfer_desc),
+                        style = MaterialTheme.typography.body2,
+                        color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f),
+                    )
+                }
+                Switch(checked = nonTransferable, onCheckedChange = { nonTransferable = it })
             }
 
             Button(onClick = { save() }, modifier = Modifier.fillMaxWidth().padding(top = 24.dp)) {

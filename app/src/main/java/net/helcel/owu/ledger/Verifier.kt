@@ -52,7 +52,7 @@ object Verifier {
 
             state = when (block) {
                 is Block.Issue -> throw Rejected(n, "a second ISSUE")
-                is Block.Transfer -> transfer(n, iou.id, block, state)
+                is Block.Transfer -> transfer(n, iou, block, state)
                 is Block.Redeemed -> redeemed(n, block, state)
             }.copy(length = n + 1, headHash = block.hash(iou.id))
         }
@@ -69,10 +69,12 @@ object Verifier {
      * A hand-over. The three rules above the agreement hold whether it is a
      * gift or half a swap; the rest bind this block to the other chain's.
      */
-    private fun transfer(n: Int, iouId: String, b: Block.Transfer, s: IouState): IouState {
+    private fun transfer(n: Int, iou: Iou, b: Block.Transfer, s: IouState): IouState {
+        val iouId = iou.id
         if (s.status != Status.ACTIVE) throw Rejected(n, "transfer of an OwU that is ${s.status}")
         if (b.transferor != s.holder) throw Rejected(n, "transferor is not the holder")
         if (b.transferee == b.transferor) throw Rejected(n, "transfer to self")
+        if (!iou.metadata.allowsTransfer(s, b.transferee)) throw Rejected(n, "non-transferable OwU passed on")
         val a = b.agreement ?: return s.copy(holder = b.transferee)
 
         val mine = a.side(iouId) ?: throw Rejected(n, "agreement does not name this OwU")

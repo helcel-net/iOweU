@@ -33,6 +33,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.automirrored.filled.Send
@@ -571,6 +572,10 @@ fun MetaGates(
             text = geo.label ?: "%.4f, %.4f".format(geo.latitude, geo.longitude),
             wrong = outOfPlace,
         )
+    }
+    // Unlike the two above, this one is a bar: the chain refuses it.
+    if (metadata.nonTransferable) {
+        GateLine(icon = Icons.Default.Lock, text = stringResource(R.string.non_transferable), wrong = false)
     }
 }
 

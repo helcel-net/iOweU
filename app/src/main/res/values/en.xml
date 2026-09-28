@@ -109,6 +109,10 @@
     <string name="window_until">until %1$s</string>
     <string name="window_expired">expired</string>
     <string name="issue_bad_window">The window closes before it opens.</string>
+    <string name="field_transfer">Non-transferable</string>
+    <string name="field_transfer_desc">Whoever you give it to can only redeem it, not pass it on.</string>
+    <string name="non_transferable">not transferable</string>
+    <string name="non_transferable_desc">Can be redeemed, not passed on: once given, it only goes back to whoever wrote it.</string>
     <string name="role_debtor">Owed by</string>
     <string name="role_holder">Held by</string>
     <string name="issue_need_title">Say what is owed.</string>
